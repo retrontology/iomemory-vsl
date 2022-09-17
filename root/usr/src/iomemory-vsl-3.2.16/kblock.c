@@ -40,7 +40,6 @@
 #include <fio/port/common-linux/kblock.h>
 #include <fio/port/atomic_list.h>
 #include <linux/blk_types.h>
-#include <linux/blkdev.h>
 #include <linux/bio.h>
 #include <linux/blk-mq.h>
 #include <linux/version.h>
@@ -333,7 +332,6 @@ int kfio_create_disk(struct fio_device *dev, kfio_pci_dev_t *pdev, uint32_t sect
 
     if (enable_discard)
     {
-        blk_queue_flag_set(QUEUE_FLAG_DISCARD, rq);
         // XXXXXXX !!! WARNING - power of two sector sizes only !!! (always true in standard linux)
         blk_queue_max_discard_sectors(rq, (UINT_MAX & ~((unsigned int) sector_size - 1)) >> 9);
         rq->limits.discard_granularity = sector_size;
@@ -367,7 +365,6 @@ int kfio_expose_disk(kfio_disk_t *dp, char *name, int major, int disk_index,
     gd->fops = &fio_bdev_ops;
     gd->queue = dp->rq;
     gd->private_data = dp->dev;
-    gd->flags = GENHD_FL_EXT_DEVT;
 
     fio_bdev_ops.owner = THIS_MODULE;
 
