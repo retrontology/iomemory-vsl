@@ -62,14 +62,14 @@ struct linux_sgl
     uint32_t            num_entries;
     uint32_t            num_mapped;
     uint32_t            sgl_size;
-    struct pci_dev     *pci_dev;
+    struct device          *dev;
     int                 pci_dir;
     struct linux_sgentry *sge;
     struct scatterlist *sl;
 };
 #define sge_to_sl(lsg, sge) ((lsg)->sl + ((sge) - (lsg)->sge))
 
-int kfio_sgl_alloc_nvec(kfio_pci_dev_t *pcidev, kfio_numa_node_t node, kfio_sg_list_t **sgl, int nvecs)
+int kfio_sgl_alloc_nvec(kfio_pci_dev_t *dev, kfio_numa_node_t node, kfio_sg_list_t **sgl, int nvecs)
 {
     struct linux_sgl *lsg;
 
@@ -87,7 +87,7 @@ int kfio_sgl_alloc_nvec(kfio_pci_dev_t *pcidev, kfio_numa_node_t node, kfio_sg_l
     lsg->sl = (struct scatterlist *)(lsg->sge + nvecs);
     sg_init_table(lsg->sl, nvecs);
 
-    lsg->pci_dev = (struct pci_dev *)pcidev;
+    lsg->dev = (struct device *)dev;
     lsg->pci_dir = 0;
 
     *sgl = lsg;
@@ -338,8 +338,8 @@ int kfio_sgl_dma_map(kfio_sg_list_t *sgl, kfio_dma_map_t *dmap, int dir)
         sl = &lsg->sl[i];
     }
 
-    i = pci_map_sg(lsg->pci_dev, lsg->sl, lsg->num_entries,
-                    dir == IODRIVE_DMA_DIR_READ ? PCI_DMA_FROMDEVICE : PCI_DMA_TODEVICE);
+    i = dma_map_sg(lsg->dev, lsg->sl, lsg->num_entries,
+                    dir == IODRIVE_DMA_DIR_READ ? DMA_FROM_DEVICE : DMA_TO_DEVICE);
     lsg->num_mapped = i;
     if (i < lsg->num_entries)
     {
@@ -385,8 +385,8 @@ int kfio_sgl_dma_unmap(kfio_sg_list_t *sgl)
     }
     if (lsg->num_mapped)
     {
-        pci_unmap_sg(lsg->pci_dev, lsg->sl, lsg->num_entries,
-                 lsg->pci_dir == IODRIVE_DMA_DIR_READ ? PCI_DMA_FROMDEVICE : PCI_DMA_TODEVICE);
+        dma_unmap_sg(lsg->dev, lsg->sl, lsg->num_entries,
+                 lsg->pci_dir == IODRIVE_DMA_DIR_READ ? DMA_FROM_DEVICE : DMA_TO_DEVICE);
     }
     lsg->num_mapped = 0;
     lsg->pci_dir = 0;

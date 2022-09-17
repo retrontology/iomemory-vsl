@@ -40,7 +40,7 @@
 #include <fio/port/common-linux/kblock.h>
 #include <fio/port/atomic_list.h>
 #include <linux/blk_types.h>
-#include <linux/genhd.h>
+#include <linux/blkdev.h>
 #include <linux/bio.h>
 #include <linux/blk-mq.h>
 #include <linux/version.h>
